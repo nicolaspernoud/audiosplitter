@@ -34,6 +34,13 @@ class _MyHomePageState extends State<MyHomePage> {
   String? leftAudioPath;
   String? rightAudioPath;
 
+  @override
+  void initState() {
+    super.initState();
+    _leftPlayer.setReleaseMode(ReleaseMode.stop);
+    _rightPlayer.setReleaseMode(ReleaseMode.stop);
+  }
+
   Future<void> _pickFile(String channel) async {
     try {
       final result = await FilePicker.platform.pickFiles(type: FileType.audio);
@@ -41,8 +48,12 @@ class _MyHomePageState extends State<MyHomePage> {
         setState(() {
           if (channel == 'left') {
             leftAudioPath = result.files.single.path;
+            _leftPlayer.setSourceDeviceFile(leftAudioPath!);
+            _leftPlayer.setBalance(-1.0);
           } else {
             rightAudioPath = result.files.single.path;
+            _rightPlayer.setSourceDeviceFile(rightAudioPath!);
+            _rightPlayer.setBalance(1.0);
           }
         });
       }
@@ -58,10 +69,6 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _play() async {
     if (leftAudioPath != null && rightAudioPath != null) {
       try {
-        await _leftPlayer.setSourceDeviceFile(leftAudioPath!);
-        await _leftPlayer.setBalance(-1.0);
-        await _rightPlayer.setSourceDeviceFile(rightAudioPath!);
-        await _rightPlayer.setBalance(1.0);
         await _leftPlayer.resume();
         await _rightPlayer.resume();
       } catch (e) {
