@@ -13,9 +13,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Audio Splitter',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      theme: ThemeData(primarySwatch: Colors.blue),
       home: const MyHomePage(),
     );
   }
@@ -29,6 +27,9 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final audioContext = AudioContextConfig(
+    focus: AudioContextConfigFocus.mixWithOthers,
+  ).build();
   final AudioPlayer _leftPlayer = AudioPlayer();
   final AudioPlayer _rightPlayer = AudioPlayer();
   String? leftAudioPath;
@@ -48,35 +49,35 @@ class _MyHomePageState extends State<MyHomePage> {
         setState(() {
           if (channel == 'left') {
             leftAudioPath = result.files.single.path;
-            _leftPlayer.setSourceDeviceFile(leftAudioPath!);
-            _leftPlayer.setBalance(-1.0);
           } else {
             rightAudioPath = result.files.single.path;
-            _rightPlayer.setSourceDeviceFile(rightAudioPath!);
-            _rightPlayer.setBalance(1.0);
           }
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error picking file: $e'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error picking file: $e')));
     }
   }
 
   Future<void> _play() async {
     if (leftAudioPath != null && rightAudioPath != null) {
       try {
-        await _leftPlayer.resume();
-        await _rightPlayer.resume();
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error playing audio: $e'),
-          ),
+        _leftPlayer.play(
+          DeviceFileSource(leftAudioPath!),
+          balance: -1.0,
+          ctx: audioContext,
         );
+        _rightPlayer.play(
+          DeviceFileSource(rightAudioPath!),
+          balance: 1.0,
+          ctx: audioContext,
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error playing audio: $e')));
       }
     }
   }
@@ -86,11 +87,9 @@ class _MyHomePageState extends State<MyHomePage> {
       await _leftPlayer.pause();
       await _rightPlayer.pause();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error pausing audio: $e'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error pausing audio: $e')));
     }
   }
 
@@ -99,11 +98,9 @@ class _MyHomePageState extends State<MyHomePage> {
       await _leftPlayer.stop();
       await _rightPlayer.stop();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error stopping audio: $e'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error stopping audio: $e')));
     }
   }
 
@@ -117,9 +114,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Audio Splitter'),
-      ),
+      appBar: AppBar(title: const Text('Audio Splitter')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -143,14 +138,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   icon: const Icon(Icons.play_arrow),
                   onPressed: _play,
                 ),
-                IconButton(
-                  icon: const Icon(Icons.pause),
-                  onPressed: _pause,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.stop),
-                  onPressed: _stop,
-                ),
+                IconButton(icon: const Icon(Icons.pause), onPressed: _pause),
+                IconButton(icon: const Icon(Icons.stop), onPressed: _stop),
               ],
             ),
           ],
